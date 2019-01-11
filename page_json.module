@@ -1,0 +1,35 @@
+<?php
+
+use Drupal\Core\Form\FormStateInterface;
+
+/**
+ * Implments hook_form_alter()
+ * @param type $form
+ * @param FormStateInterface $form_state
+ * @param type $form_id
+ */
+function page_json_form_alter(&$form, FormStateInterface $form_state, $form_id) {
+  // Check form_id for for site information form
+  if ($form_id == 'system_site_information_settings') {
+    // Set default value to 'No API Key yet'
+    $siteapikey = \Drupal::config('system.site')->get('siteapikey');
+    $siteapikey = empty($siteapikey) ? t('No API Key yet') : $siteapikey;
+
+    // Create form field for site api key
+    $form['siteapikey'] = [
+      '#type' => 'textfield',
+      '#title' => t('Site API Key'),
+      '#default_value' => $siteapikey,
+    ];
+
+    // Update button text and submit handler
+    $form['actions']['submit']['#value'] = t('Update Configuration');
+    $form['actions']['submit']['#submit'][] = 'page_json_form_submit';
+  }
+}
+
+function page_json_form_submit(&$form, FormStateInterface $form_state) {
+  // Set the site api key.
+  \Drupal::configFactory()->getEditable('system.site')->set('siteapikey', $form_state->getValue('siteapikey'))->save();
+  drupal_set_message(t('Site API key has been saved with value: %siteapikey', ['%siteapikey' => $form_state->getValue('siteapikey')]));
+}
